@@ -3,11 +3,7 @@ package ma.enset.event_sourcing_tp.commands.controllers;
 import ma.enset.event_sourcing_tp.commands.commands.AddAccountCommand;
 import ma.enset.event_sourcing_tp.commands.dto.AddNewAccountRequestDTO;
 import org.axonframework.commandhandling.gateway.CommandGateway;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
+import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -34,6 +30,11 @@ public class AccountCommandController {
 
         return response;
     }
+    @ExceptionHandler(Exception.class)
+    public String exceptionHandler(Exception exception) {
+        return exception.getMessage();
+    }
+
 }
 
 
