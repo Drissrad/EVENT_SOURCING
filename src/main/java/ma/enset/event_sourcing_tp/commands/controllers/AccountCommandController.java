@@ -2,8 +2,10 @@ package ma.enset.event_sourcing_tp.commands.controllers;
 
 import ma.enset.event_sourcing_tp.commands.commands.AddAccountCommand;
 import ma.enset.event_sourcing_tp.commands.commands.CreditAccountCommand;
+import ma.enset.event_sourcing_tp.commands.commands.DebitAccountCommand;
 import ma.enset.event_sourcing_tp.commands.dto.AddNewAccountRequestDTO;
 import ma.enset.event_sourcing_tp.commands.dto.CreditAccountRequestDTO;
+import ma.enset.event_sourcing_tp.commands.dto.DebitAccountRequestDTO;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.eventsourcing.eventstore.EventStore;
 import org.springframework.web.bind.annotation.*;
@@ -48,6 +50,17 @@ public class AccountCommandController {
         CompletableFuture<String> response = commandGateway.send(
                 new CreditAccountCommand(
                         UUID.randomUUID().toString(),
+                        request.amount(),
+                        request.currency()
+                )
+        );
+        return response;
+    }
+    @PostMapping("/debit")
+    public CompletableFuture<String> debitAccount(@RequestBody DebitAccountRequestDTO request) {
+        CompletableFuture<String> response = commandGateway.send(
+                new DebitAccountCommand(
+                        request.accountId(),
                         request.amount(),
                         request.currency()
                 )

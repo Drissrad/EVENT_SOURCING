@@ -3,10 +3,12 @@ package ma.enset.event_sourcing_tp.commands.aggregates;
 import lombok.extern.slf4j.Slf4j;
 import ma.enset.event_sourcing_tp.commands.commands.AddAccountCommand;
 import ma.enset.event_sourcing_tp.commands.commands.CreditAccountCommand;
+import ma.enset.event_sourcing_tp.commands.commands.DebitAccountCommand;
 import ma.enset.event_sourcing_tp.enums.AccountStatus;
 import ma.enset.event_sourcing_tp.event.AccountActivatedEvent;
 import ma.enset.event_sourcing_tp.event.AccountCreatedEvent;
 import ma.enset.event_sourcing_tp.event.AccountCreditedEvent;
+import ma.enset.event_sourcing_tp.event.AccountDebitedEvent;
 import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.eventsourcing.EventSourcingHandler;
 import org.axonframework.modelling.command.AggregateIdentifier;
@@ -50,6 +52,13 @@ public class AccountAggregate {
         this.balance = event.getInitialBalance();
         this.status = event.getStatus();
     }
+    @EventSourcingHandler
+    public void on(AccountActivatedEvent event) {
+        log.info("############### AccountActivatedEvent occurred ###############");
+        this.accountId = event.getAccountId();
+        this.status = event.getStatus();
+    }
+
     @CommandHandler
     public void handle(CreditAccountCommand command) {
 
@@ -77,6 +86,34 @@ public class AccountAggregate {
         this.accountId = event.getAccountId();
         this.balance = this.balance + event.getAmount();
     }
+    @CommandHandler
+    public void handle(DebitAccountCommand command) {
+        log.info("############### DebitAccountCommand Received ###############");
+
+        if (!status.equals(AccountStatus.ACTIVATED))
+            throw new RuntimeException("The account " + command.getId() + " is not activated");
+
+        if (balance < command.getAmount())
+            throw new RuntimeException("Balance Not sufficient Exception");
+
+        if (command.getAmount() <= 0)
+            throw new IllegalArgumentException("Amount must be positive");
+
+        AggregateLifecycle.apply(new AccountDebitedEvent(
+                command.getId(),
+                command.getAmount(),
+                command.getCurrency()
+        ));
+    }
+    @EventSourcingHandler
+    public void on(AccountDebitedEvent event) {
+        log.info("############### AccountDebitedEvent occurred ###############");
+        this.accountId = event.getAccountId();
+        this.balance = this.balance - event.getAmount();
+    }
+
+
+
 
 
 
