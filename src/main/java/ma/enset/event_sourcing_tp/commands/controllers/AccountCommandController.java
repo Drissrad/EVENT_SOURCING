@@ -1,17 +1,22 @@
 package ma.enset.event_sourcing_tp.commands.controllers;
 
 import ma.enset.event_sourcing_tp.commands.commands.AddAccountCommand;
+import ma.enset.event_sourcing_tp.commands.commands.CreditAccountCommand;
 import ma.enset.event_sourcing_tp.commands.dto.AddNewAccountRequestDTO;
+import ma.enset.event_sourcing_tp.commands.dto.CreditAccountRequestDTO;
 import org.axonframework.commandhandling.gateway.CommandGateway;
+import org.axonframework.eventsourcing.eventstore.EventStore;
 import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Stream;
 
 @RestController
 @RequestMapping("/commands/accounts")
 public class AccountCommandController {
 
     private CommandGateway commandGateway;
+    private EventStore eventStore;
 
     public AccountCommandController(CommandGateway commandGateway) {
         this.commandGateway = commandGateway;
@@ -34,6 +39,23 @@ public class AccountCommandController {
     public String exceptionHandler(Exception exception) {
         return exception.getMessage();
     }
+    @GetMapping("/events/{accountId}")
+    public Stream eventStore(@PathVariable String accountId) {
+        return eventStore.readEvents(accountId).asStream();
+    }
+    @PostMapping("/credit")
+    public CompletableFuture<String> creditAccount(@RequestBody CreditAccountRequestDTO request) {
+        CompletableFuture<String> response = commandGateway.send(
+                new CreditAccountCommand(
+                        UUID.randomUUID().toString(),
+                        request.amount(),
+                        request.currency()
+                )
+        );
+        return response;
+    }
+
+
 
 }
 
