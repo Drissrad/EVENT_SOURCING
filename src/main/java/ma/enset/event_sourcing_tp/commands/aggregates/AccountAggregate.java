@@ -4,11 +4,9 @@ import lombok.extern.slf4j.Slf4j;
 import ma.enset.event_sourcing_tp.commands.commands.AddAccountCommand;
 import ma.enset.event_sourcing_tp.commands.commands.CreditAccountCommand;
 import ma.enset.event_sourcing_tp.commands.commands.DebitAccountCommand;
+import ma.enset.event_sourcing_tp.commands.commands.UpdateAccountStatusCommand;
 import ma.enset.event_sourcing_tp.enums.AccountStatus;
-import ma.enset.event_sourcing_tp.event.AccountActivatedEvent;
-import ma.enset.event_sourcing_tp.event.AccountCreatedEvent;
-import ma.enset.event_sourcing_tp.event.AccountCreditedEvent;
-import ma.enset.event_sourcing_tp.event.AccountDebitedEvent;
+import ma.enset.event_sourcing_tp.event.*;
 import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.eventsourcing.EventSourcingHandler;
 import org.axonframework.modelling.command.AggregateIdentifier;
@@ -110,6 +108,23 @@ public class AccountAggregate {
         log.info("############### AccountDebitedEvent occurred ###############");
         this.accountId = event.getAccountId();
         this.balance = this.balance - event.getAmount();
+    }
+    @CommandHandler
+    public void handle(UpdateAccountStatusCommand command){
+        log.info("############### UpdateAccountStatusCommand Received ###############");
+        if(command.getStatus()==status) throw new RuntimeException("This account "+command.getId()+" Is already is"+command.getStatus());
+        AggregateLifecycle.apply(new AccountStatusUpdatedEvent(
+                command.getId(),
+                command.getStatus()
+        ));
+    }
+
+    @EventSourcingHandler
+    public void on(AccountStatusUpdatedEvent event){
+        log.info("############### AccountDebitedEvent occured ###############");
+        this.accountId = event.getAccountId();
+        this.status = event.getStatus();
+
     }
 
 

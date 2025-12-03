@@ -3,9 +3,11 @@ package ma.enset.event_sourcing_tp.commands.controllers;
 import ma.enset.event_sourcing_tp.commands.commands.AddAccountCommand;
 import ma.enset.event_sourcing_tp.commands.commands.CreditAccountCommand;
 import ma.enset.event_sourcing_tp.commands.commands.DebitAccountCommand;
+import ma.enset.event_sourcing_tp.commands.commands.UpdateAccountStatusCommand;
 import ma.enset.event_sourcing_tp.commands.dto.AddNewAccountRequestDTO;
 import ma.enset.event_sourcing_tp.commands.dto.CreditAccountRequestDTO;
 import ma.enset.event_sourcing_tp.commands.dto.DebitAccountRequestDTO;
+import ma.enset.event_sourcing_tp.commands.dto.UpdateAccountStatusRequestDTO;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.eventsourcing.eventstore.EventStore;
 import org.springframework.web.bind.annotation.*;
@@ -63,6 +65,16 @@ public class AccountCommandController {
                         request.accountId(),
                         request.amount(),
                         request.currency()
+                )
+        );
+        return response;
+    }
+    @PutMapping("/updateStatus")
+    public CompletableFuture<String> updateStatus(@RequestBody UpdateAccountStatusRequestDTO request) {
+        CompletableFuture<String> response = commandGateway.send(
+                new UpdateAccountStatusCommand(
+                        request.accountId(),
+                        request.status()
                 )
         );
         return response;
