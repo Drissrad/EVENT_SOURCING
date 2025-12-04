@@ -1,9 +1,10 @@
 package ma.enset.event_sourcing_tp.query.handlers;
 
 import lombok.extern.slf4j.Slf4j;
-import ma.enset.event_sourcing_tp.event.AccountCreatedEvent;
-import ma.enset.event_sourcing_tp.event.AccountCreditedEvent;
+import ma.enset.event_sourcing_tp.event.*;
 import ma.enset.event_sourcing_tp.query.entites.Account;
+import ma.enset.event_sourcing_tp.query.entites.AccountOperation;
+import ma.enset.event_sourcing_tp.query.entites.OperationType;
 import ma.enset.event_sourcing_tp.query.repository.AccountRepository;
 import ma.enset.event_sourcing_tp.query.repository.OperationRepository;
 import org.axonframework.eventhandling.EventHandler;
@@ -29,11 +30,60 @@ public class AccountEventHandler {
                 .id(event.getAccountId())
                 .balance(event.getInitialBalance())
                 .status(event.getStatus())
+                .currency(event.getCurrency())
                 .createdAt(eventMessage.getTimestamp())
                 .build();
 
         accountRepository.save(account);
     }
+    @EventHandler
+    public void on(AccountActivatedEvent event){
+        log.info("=============== Query Side AccountActivatedEvent Recived ===============");
+        Account account = accountRepository.findById(event.getAccountId()).get();
+        account.setStatus(event.getStatus());
+        accountRepository.save(account);
+    }
+
+    @EventHandler
+    public void on(AccountStatusUpdatedEvent event){
+        log.info("=============== Query Side accountStatusUpdatedEvent Recived ===============");
+        Account account = accountRepository.findById(event.getAccountId()).get();
+        account.setStatus(event.getStatus());
+        accountRepository.save(account);
+    }
+    @EventHandler
+    public void on(AccountDebitedEvent event, EventMessage eventMessage){
+        log.info("=============== Query Side AccountDebitedEvent Recived ===============");
+        Account account = accountRepository.findById(event.getAccountId()).get();
+        AccountOperation accountOperation = AccountOperation.builder()
+                .amount(event.getAmount())
+                .date(eventMessage.getTimestamp())
+                .type(OperationType.DEBIT)
+                .currency(event.getCurrency())
+                .account(account)
+                .build();
+
+        operationRepository.save(accountOperation);
+        account.setBalance(account.getBalance() - accountOperation.getAmount());
+        accountRepository.save(account);
+    }
+    public void on(AccountCreditedEvent event, EventMessage eventMessage){
+        log.info("=============== Query Side AccountCreditedEvent  Recived ===============");
+        Account account = accountRepository.findById(event.getAccountId()).get();
+        AccountOperation accountOperation = AccountOperation.builder()
+                .amount(event.getAmount())
+                .date(eventMessage.getTimestamp())
+                .type(OperationType.CREDIT)
+                .currency(event.getCurrency())
+                .account(account)
+                .build();
+        operationRepository.save(accountOperation);
+        account.setBalance(account.getBalance() + accountOperation.getAmount());
+        accountRepository.save(account);
+    }
+
+
+
 
 
 }
