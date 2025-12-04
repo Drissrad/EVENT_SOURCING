@@ -3,6 +3,7 @@ package ma.enset.event_sourcing_tp.query.entites;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.Instant;
 import java.util.Date;
 @Entity
 @Getter
@@ -13,7 +14,7 @@ import java.util.Date;
 public class AccountOperation {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private Date date;
+    private Instant date;
     private double amount;
     @Enumerated(EnumType.STRING)
     private OperationType type;
